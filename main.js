@@ -61,6 +61,22 @@ function getTableFromSheet(url = SHEET_URL, sheetName = SHEET_NAME) {
 }
 
 /**
+ * 2次元配列を日付順でソートする
+ *
+ * @param {string[]} array - [[タイトル,URL,日付],...] の2次元配列
+ * @return {string[]} - ソートした配列が帰ってくる
+ */
+function SortTwoDimensionalArrayByDate(array) {
+  array.sort(function (a, b) {
+    return new Date(a[2]) - new Date(b[2]);
+  });
+
+  console.log(array);
+
+  return array;
+}
+
+/**
  * discordにメッセージを捜真する関数
  *
  * @param {string} message - 送信するメッセージの内容
@@ -111,6 +127,9 @@ function main() {
       message.push(j);
     }
   }
+
+  // 送信メッセージを日付順にソート
+  SortTwoDimensionalArrayByDate(message);
 
   // discordにメッセージを送信する
   for (let m of message) {
