@@ -1,12 +1,10 @@
-/*TODO
-  手元の最新と比較
-  比較して最新じゃなかった場合
-    手元の情報まで情報を取得
-    手元の情報と同じになったら終わり
-    最新の情報を更新
-  取得した情報を時間でソート
-  discordへ送信
-*/
+// 環境変数
+const SHEET_URL =
+  PropertiesService.getScriptProperties().getProperty("SHEET_URL");
+const SHEET_NAME =
+  PropertiesService.getScriptProperties().getProperty("SHEET_NAME");
+const WEBHOOK_URL =
+  PropertiesService.getScriptProperties().getProperty("WEBHOOK_URL");
 
 /**
  * 指定したURLのRSSを取得する関数
@@ -28,7 +26,6 @@ function getRssData(url = URL) {
     let pubDate = item.getChildText("pubDate");
     articles.push([title, link, pubDate]);
   }
-  console.log(articles);
   return articles;
 }
 
@@ -70,8 +67,6 @@ function SortTwoDimensionalArrayByDate(array) {
   array.sort(function (a, b) {
     return new Date(a[2]) - new Date(b[2]);
   });
-
-  console.log(array);
 
   return array;
 }
@@ -116,27 +111,35 @@ function main() {
     // RSSを取得
     rssData = getRssData((url = i[1]));
     // 日付が一致するか比較
-    if (rssData[0][2] == i[2]) {
+    if (i[2] == rssData[0][2]) {
       break;
     }
+    // breakしたかどうかのフラグ
+    isBreak = false;
     for (let j of rssData) {
       if (j[2] == i[2]) {
         i[2] = rssData[0][2];
+        isBreak = true;
         break;
       }
       message.push(j);
     }
+    // breakしなかった場合(一致する日付がrssになかった場合)
+    if (isBreak == false) {
+      // rssの最新の日付で更新
+      i[2] = rssData[0][2];
+    }
   }
 
+  // スプレッドシートを更新する
+  setDataToSheet(data);
+
   // 送信メッセージを日付順にソート
-  SortTwoDimensionalArrayByDate(message);
+  message = SortTwoDimensionalArrayByDate(message);
 
   // discordにメッセージを送信する
   for (let m of message) {
     sendDiscordMessage(m.join("\n"));
     Utilities.sleep(25);
   }
-
-  // スプレッドシートを更新する
-  setDataToSheet(data);
 }
